@@ -1,16 +1,17 @@
 #!/bin/bash
 
+# créer un utilisateur keycloak
 if [ $KEYCLOAK_ADMIN_USER ] && [ $KEYCLOAK_ADMIN_PASSWORD ]; then
     keycloak/bin/add-user-keycloak.sh --user $KEYCLOAK_ADMIN_USER --password $KEYCLOAK_ADMIN_PASSWORD
 fi
 
-echo "Configuring Keycloak instance with keycloak-setup.cli"
+echo "Configuration de l'instance Keycloak depuis keycloak-setup.cli"
 
 cd $JBOSS_HOME
 
 echo "yes" | bin/jboss-cli.sh --file=./keycloak-setup.cli
 echo 
-echo "Configuration complete."
+echo "Configuration terminée."
 echo 
 echo "Starting Keycloak"
 java -version
@@ -25,5 +26,5 @@ exec $JBOSS_HOME/bin/standalone.sh \
   -Dkeycloak.migration.realmName=acme \
   -Dkeycloak.migration.provider=singleFile \
   -Dkeycloak.migration.file=acme-realm.json \
-  $@ 
+  $@
 exit $?
