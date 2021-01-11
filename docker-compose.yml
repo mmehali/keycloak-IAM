@@ -2,38 +2,6 @@ version: '2'
 
 services:
 
-  mongo:
-    image: "mongo:3.2.12"
-    volumes:
-      - ./data/mongodb/data:/data/db
-
-  elasticsearch:
-    image: "elasticsearch:5.6.10"
-    command: "elasticsearch -Ecluster.name=graylog"
-    ports:
-      - "9200:9200"
-    volumes:
-      - ./data/elasticsearch/data:/usr/share/elasticsearch/data
-
-# see https://hub.docker.com/r/graylog2/server/
-  graylog:
-    image: graylog/graylog:2.4.6-1
-    environment:
-      GRAYLOG_PASSWORD_SECRET: somepasswordpepper
-      GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      GRAYLOG_WEB_ENDPOINT_URI: http://127.0.0.1:9000/api
-      GRAYLOG_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    depends_on:
-      - mongo
-      - elasticsearch
-    ports:
-      - "9000:9000"
-      - "12123:12123/udp"
-      - "12124:12124"
-    volumes:
-      - ./data/graylog/data/journal:/usr/share/graylog/data/journal
-#      - ./data/graylog/config:/usr/share/graylog/data/config      
-
   idm-db:
     image: postgres:10.4-alpine
     environment: 
@@ -45,14 +13,6 @@ services:
     volumes:
       - ./data/postgres/data:/var/lib/postgresql/data
 
-  idm-amq:
-    image: rmohr/activemq:5.14.5-alpine
-    ports:
-      - "8161:8161"
-    volumes:
-#      - ./data/activemq/conf:/opt/activemq/conf
-      - ./data/activemq/data:/var/activemq/data
-
   idm-keycloak:
     build: ./keycloak
     environment: 
@@ -62,33 +22,12 @@ services:
       JDBC_USER: keycloak
       JDBC_PASSWORD: keycloak
       JDBC_DRIVERNAME: postgres
-      ACTIVE_MQ_URL: tcp://idm-amq:61616
-      LOG_SERVER_HOST: udp:graylog
-      LOG_SERVER_PORT: 12123
     ports:
       - "8899:8080"
     extra_hosts:
       - "apps.tdlabs.local:172.18.0.1"
     depends_on:
-      - graylog
-      - idm-amq
       - idm-db
     volumes:
       - ./acme-realm.json:/opt/jboss/keycloak/acme-realm.json
-
-
-# see https://github.com/docker/dockercloud-haproxy
-#  ha-proxy:
-#    image: dockercloud/haproxy:1.6.4
-#    environment: 
-#      STATS_PORT: 1936
-#      BALANCE: roundrobin
-##      EXTRA_GLOBAL_SETTINGS: "debug"
-#      EXTRA_FRONTEND_SETTINGS_80: option forwardfor, http-request set-header X-Forwarded-Port %[dst_port], cookie KC_ prefix, cookie KEYCLOAK_ prefix
-#    ports:
-#      - "8080:80"
-#      - "1936:1936"
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    links:
-#      - idm-keycloak
+      
