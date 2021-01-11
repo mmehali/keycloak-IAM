@@ -43,7 +43,7 @@ echo SETUP: Register custom logger
 echo SETUP: Adjust logging levels for custom loggers
 /subsystem=logging/logger=de.tdlabs.keycloak.ext:change-log-level(level=INFO)
 /subsystem=logging/logger=de.tdlabs.keycloak.ext.events:change-log-level(level=INFO)
-
+## configuration du driver postgres
 echo SETUP: Register Postgresql JDBC Driver
 /subsystem=datasources/jdbc-driver=postgres:add(driver-name="postgres",driver-module-name="org.postgres",driver-class-name=org.postgresql.Driver)
 
