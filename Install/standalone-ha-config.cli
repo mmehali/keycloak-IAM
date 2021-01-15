@@ -1,5 +1,5 @@
-
 embed-server --server-config=standalone-ha.xml --std-out=echo
+run-batch --file=/vagrant/cli/database.cli
 run-batch --file=/vagrant/cli/loglevel.cli
 run-batch --file=/vagrant/cli/proxy.cli
 run-batch --file=/vagrant/cli/hostname.cli
