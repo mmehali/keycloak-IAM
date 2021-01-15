@@ -375,8 +375,33 @@ fi
 exec /opt/jboss/keycloak/bin/standalone.sh $SYS_PROPS $@
 exit $?
 ```
+## tools/databases/change-database.sh
+#!/bin/bash -e
 
-##/opt/jboss/tools/x509.sh
+DB_VENDOR=$1
+
+cd /opt/jboss/keycloak
+
+bin/jboss-cli.sh --file=/opt/jboss/tools/cli/databases/$DB_VENDOR/standalone-configuration.cli
+rm -rf /opt/jboss/keycloak/standalone/configuration/standalone_xml_history
+
+bin/jboss-cli.sh --file=/opt/jboss/tools/cli/databases/$DB_VENDOR/standalone-ha-configuration.cli
+rm -rf standalone/configuration/standalone_xml_history/current/*
+### databases/$DB_VENDOR/standalone-ha-configuration.cli
+#### tools/databases/postgres/module.xml
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.postgresql.jdbc">
+   <resources>
+      <resource-root path="postgres-jdbc.jar"/>
+   </resources>
+   <dependencies>
+      <module name="javax.api"/>
+      <module name="javax.transaction.api"/>
+   </dependencies>
+</module>
+```
+## /opt/jboss/tools/x509.sh
 ```
 #!/bin/bash
 
