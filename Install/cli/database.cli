@@ -1,1 +1,25 @@
-fsd
+
+echo "SETUP: configuration du driver postgresql-----------------"
+/subsystem=datasources/jdbc-driver=postgresql:add( \
+    driver-name=postgresql, \
+    driver-module-name=org.postgresql, \
+    driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
+
+#echo SETUP: Supression de KeycloakDS---------------------------
+#if (outcome == success) of /subsystem=datasources/data-source=KeycloakDS:read-resource
+#    /subsystem=datasources/data-source=KeycloakDS:remove
+#end-if
+
+echo SETUP: installation de la datasource postgres-------------
+/subsystem=datasources/data-source=KeycloakDS:add( \
+    jndi-name=java:jboss/datasources/KeycloakDS, \
+    driver-name=postgresql, \
+    connection-url="jdbc:postgresql://localhost/keycloak?currentSchema=public", \
+    user-name="keycloak", password="keycloak", \
+    use-java-context=true, \
+    check-valid-connection-sql="select 1", \
+    validate-on-match=false, \
+    background-validation=true, \
+    background-validation-millis=10000)
+
+

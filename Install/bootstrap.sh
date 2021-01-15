@@ -97,12 +97,11 @@ sudo cp /vagrant/postgres/module.xml /opt/keycloak/modules/system/layers/base/or
 echo "-----------------------------------------------------"
 echo "Step 10 : configuration keycloak                     "
 echo "-----------------------------------------------------"
-
 sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/standalone-ha-config.cli
 sudo rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
 
 echo "-----------------------------------------------------"
-echo "Step 11: ajouter un administateur                    "
+echo "Step 11: ajouter un administateur keycloak           "
 echo "-----------------------------------------------------"
 sudo /opt/keycloak/bin/add-user-keycloak.sh -u admin -p admin
 
@@ -126,6 +125,11 @@ echo "-----------------------------------------------------"
 sudo systemctl daemon-reload
 sudo systemctl start keycloak
 sudo systemctl enable keycloak
+sudo systemctl status keycloak
+sudo tail -f /opt/keycloak/standalone/log/server.log
+journalctl -u keycloak.service
+
+#voir https://medium.com/@hasnat.saeed/setup-keycloak-server-on-ubuntu-18-04-ed8c7c79a2d9
 
 #sudo /sbin/service keycloak start
 echo "-----------------------------------------------------"
