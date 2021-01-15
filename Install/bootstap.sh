@@ -88,7 +88,7 @@ else
 fi
 
 echo "------------------------------------------------"
-echo "Step 3 : Extraire keycloak tar.gz dans /opt     "
+echo "Step 9 : installation du driver postgres        "
 echo "------------------------------------------------" 
 mkdir -p /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
 cd /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
@@ -99,10 +99,11 @@ echo "-----------------------------------------------------"
 echo "Step 9 : configuration keycloak avant demarrage      "
 echo "-----------------------------------------------------"
 
-
-
 sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/keycloak_configure.cli
+cd /opt/keycloak
 
+bin/jboss-cli.sh --file=/opt/tools/cli/standalone-ha-configuration.cli
+rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
 
 echo "-----------------------------------------------------"
 echo "Step 10: Configure keycloak to be run as a service   "
