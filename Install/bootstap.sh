@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-# This script downloads and installs Keycloak.
-# Use the VERSION environment variable below to define the version to be used.
-
-VERSION=11.0.3
-
-DOWNLOAD_URL=http://downloads.jboss.org/keycloak/${VERSION}/keycloak-${VERSION}.tar.gz
-POSTGRESQL_URL=https://jdbc.postgresql.org/download/postgresql-42.2.18.jar
+KEYCLOAK_VERSION=11.0.3
+POSTGRES_VERSION=42.2.18
+KEYCLOAK_URL=http://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/keycloak-${KEYCLOAK_VERSION}.tar.gz
+POSTGRESQL_URL=https://jdbc.postgresql.org/download/postgresql-$POSTGRES_VERSION.jar
 
 
 sudo yum check-update 
@@ -33,31 +30,30 @@ sudo useradd  -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak
 echo "--------------------------------------------"
 echo "Step 2 : Telecharger keycloak               "
 echo "--------------------------------------------"
-if [ -f "/vagrant/downloads/keycloak-${VERSION}.tar.gz" ];
+if [ -f "/vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz" ];
 then
-    echo "Installation Keycloak depuis /vagrant/downloads/keycloak-${VERSION} ..."
+    echo "Installation Keycloak depuis /vagrant/downloads/keycloak-${KEYCLOAK_VERSION} ..."
 else
-    echo "Téléchargement de  keycloak-${VERSION} ..."
+    echo "Téléchargement de  keycloak-${KEYCLOAK_VERSION} ..."
     mkdir -p /vagrant/downloads
-    wget -q -O /vagrant/downloads/keycloak-${VERSION}.tar.gz "${DOWNLOAD_URL}"
+    wget -q -O /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz "${KEYCLOAK_URL}"
     if [ $? != 0 ];
     then
-        echo "FATAL: Failed to download Keycloak from ${DOWNLOAD_URL}"	
+        echo "GRAVE: Téléchargement keycloak impossible depuis ${KEYCLOAK_URL}"	
         exit 1
     fi
-
-    echo "Installing Keycloak ..."
+    echo "Installation Keycloak ..."
 fi
 
 echo "------------------------------------------------"
-echo "Step 3 : Extractraire keycloak tar.gz dans /opt "
+echo "Step 3 : Extraire keycloak tar.gz dans /opt "
 echo "------------------------------------------------" 
-sudo tar xfz /vagrant/downloads/keycloak-${VERSION}.tar.gz -C /opt
+sudo tar xfz /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz -C /opt
 
 echo "--------------------------------------------------------------------"
 echo "Step 4: create a lien symbolique pointant sur le rep d'installation "
 echo "--------------------------------------------------------------------"
-sudo ln -s /opt/keycloak-${VERSION} /opt/keycloak
+sudo ln -s /opt/keycloak-${KEYCLOAK_VERSION} /opt/keycloak
 
 
 echo "-----------------------------------------------------"
@@ -76,16 +72,33 @@ echo "--------------------------------------------------"
 echo "-----------------------------------------------------"
 echo "Step 8 : Telecharger le driver postgresql            " 
 echo "-----------------------------------------------------"
-wget -q -O /vagrant/downloads/postgresql-42.2.18.jar  "${POSTGRESQL_URL}"
+if [ -f "/vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar" ];
+then
+    echo "Installation postgresql depuis /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar..."
+else
+    echo "Téléchargement de  postgresql-${POSTGRES_VERSION}.jar ..."
+    mkdir -p /vagrant/downloads
+    wget -q -O /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar "${POSTGRES_URL}"
+    if [ $? != 0 ];
+    then
+        echo "GRAVE: Téléchargement du driver Postgres impossible depuis ${POSTGRES_URL}"	
+        exit 1
+    fi
+    echo "Installation du driver postgres ..."
+fi
+
+echo "------------------------------------------------"
+echo "Step 3 : Extraire keycloak tar.gz dans /opt     "
+echo "------------------------------------------------" 
+mkdir -p /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
+cd /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
+sudo cp /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar .
+cp /vagrant/postgres/module.xml .
 
 echo "-----------------------------------------------------"
 echo "Step 9 : configuration keycloak avant demarrage      "
 echo "-----------------------------------------------------"
-sudo -u keycloak /opt/keycloak/bin/jboss-cli.sh 'embed-server,/subsystem=datasources/jdbc-driver=mysql:add(
-         driver-name=postgresql,
-	     driver-module-name=org.mysql,
-	     driver-class-name=org.postgresql.xa.PGXADataSource
-	     )'
+
 
 
 sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/keycloak_configure.cli
@@ -96,13 +109,13 @@ echo "Step 10: Configure keycloak to be run as a service   "
 echo "-----------------------------------------------------"
 sudo mkdir -p /etc/keycloak
 
-sudo cp /vagrant/launch.sh /opt/keycloak-${VERSION}/bin/
-sudo sh -c 'chmod +x /opt/keycloak-${VERSION}/bin'
-#sudo chown keycloak: /opt/keycloak-${VERSION}/bin/launch.sh
+sudo cp /vagrant/launch.sh /opt/keycloak-${KEYCLOAK_VERSION}/bin/
+sudo sh -c 'chmod +x /opt/keycloak-${KEYCLOAK_VERSION}/bin'
+#sudo chown keycloak: /opt/keycloak-${KEYCLOAK_VERSION}/bin/launch.sh
 
 sudo cp /vagrant/keycloak.service /etc/systemd/system/
 
-#sudo cp /vagrant/keycloak.conf /etc/keycloak-${VERSION}/
+#sudo cp /vagrant/keycloak.conf /etc/keycloak-${KEYCLOAK_VERSION}/
 
 echo "-----------------------------------------------------"
 echo "Step 11: start the  keycloak service"
