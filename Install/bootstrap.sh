@@ -95,7 +95,7 @@ sudo cp /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar /opt/keycloak/modu
 sudo cp /vagrant/postgres/module.xml /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
 
 echo "-----------------------------------------------------"
-echo "Step 10 : configuration keycloak                      "
+echo "Step 10 : configuration keycloak                     "
 echo "-----------------------------------------------------"
 
 sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/standalone-ha-config.cli
@@ -126,8 +126,6 @@ echo "-----------------------------------------------------"
 sudo systemctl daemon-reload
 sudo systemctl start keycloak
 sudo systemctl enable keycloak
-
-
 
 #sudo /sbin/service keycloak start
 echo "-----------------------------------------------------"
