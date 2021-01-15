@@ -102,6 +102,10 @@ echo "-----------------------------------------------------"
 sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/standalone-ha-config.cli
 sudo rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
 
+echo "-----------------------------------------------------"
+echo "Step 10: ajouter un administateur                    "
+echo "-----------------------------------------------------"
+/opt/keycloak/bin/add-user-keycloak.sh -u admin -p admin
 
 
 echo "-----------------------------------------------------"
