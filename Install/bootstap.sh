@@ -96,14 +96,13 @@ sudo cp /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar .
 cp /vagrant/postgres/module.xml .
 
 echo "-----------------------------------------------------"
-echo "Step 9 : configuration keycloak avant demarrage      "
+echo "Step 9 : configuration keycloak                      "
 echo "-----------------------------------------------------"
 
-sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/keycloak_configure.cli
-cd /opt/keycloak
+sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/standalone-ha-config.cli
+sudo rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
 
-bin/jboss-cli.sh --file=/opt/tools/cli/standalone-ha-configuration.cli
-rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
+
 
 echo "-----------------------------------------------------"
 echo "Step 10: Configure keycloak to be run as a service   "
