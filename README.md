@@ -1,3 +1,21 @@
+# variables
+```
+ENV KEYCLOAK_VERSION 12.0.1
+ENV JDBC_POSTGRES_VERSION 42.2.5
+ENV JDBC_MYSQL_VERSION 8.0.22
+ENV JDBC_MARIADB_VERSION 2.5.4
+ENV JDBC_MSSQL_VERSION 8.2.2.jre11
+
+ENV LAUNCH_JBOSS_IN_BACKGROUND 1
+ENV PROXY_ADDRESS_FORWARDING false
+ENV JBOSS_HOME /opt/jboss/keycloak
+ENV LANG en_US.UTF-8
+
+ARG GIT_REPO
+ARG GIT_BRANCH
+ARG KEYCLOAK_DIST=https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz
+```
+
 # build-keycloak.sh
 #!/bin/bash -e
 
@@ -10,7 +28,7 @@ if [ "$GIT_REPO" != "" ]; then
 
     # Install Git
     microdnf install -y git
-
+   
     # Install Maven
     cd /opt/jboss 
     curl -s https://apache.uib.no/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz | tar xz
@@ -48,25 +66,25 @@ fi
 ```
 ##  Create DB modules
 ```
-mkdir -p /opt/jboss/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
-cd /opt/jboss/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
+mkdir -p /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
+cd /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
 curl -L https://repo1.maven.org/maven2/org/postgresql/postgresql/$JDBC_POSTGRES_VERSION/postgresql-$JDBC_POSTGRES_VERSION.jar > postgres-jdbc.jar
-cp /opt/jboss/tools/databases/postgres/module.xml .
+cp /opt/tools/databases/postgres/module.xml .
 ```
 ## Configure Keycloak 
 ```
-cd /opt/jboss/keycloak
+cd /opt/keycloak
 
-bin/jboss-cli.sh --file=/opt/jboss/tools/cli/standalone-configuration.cli
-rm -rf /opt/jboss/keycloak/standalone/configuration/standalone_xml_history
+bin/jboss-cli.sh --file=/opt/tools/cli/standalone-configuration.cli
+rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
 
-bin/jboss-cli.sh --file=/opt/jboss/tools/cli/standalone-ha-configuration.cli
-rm -rf /opt/jboss/keycloak/standalone/configuration/standalone_xml_history
+bin/jboss-cli.sh --file=/opt/tools/cli/standalone-ha-configuration.cli
+rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
 ```
 ## Garbage 
 ```
-rm -rf /opt/jboss/keycloak/standalone/tmp/auth
-rm -rf /opt/jboss/keycloak/domain/tmp/auth
+rm -rf /opt/keycloak/standalone/tmp/auth
+rm -rf /opt/keycloak/domain/tmp/auth
 ```
 ## Set permissions 
 ```
@@ -79,10 +97,10 @@ chmod -R g+rwX /opt/jboss
 ## standalone-ha-configuration.cli
 ```
 embed-server --server-config=standalone-ha.xml --std-out=echo
-run-batch --file=/opt/jboss/tools/cli/loglevel.cli
-run-batch --file=/opt/jboss/tools/cli/proxy.cli
-run-batch --file=/opt/jboss/tools/cli/hostname.cli
-run-batch --file=/opt/jboss/tools/cli/theme.cli
+run-batch --file=/opt/tools/cli/loglevel.cli
+run-batch --file=/opt/tools/cli/proxy.cli
+run-batch --file=/opt/tools/cli/hostname.cli
+run-batch --file=/opt/tools/cli/theme.cli
 stop-embedded-server
 ```
 # loglevel.cli
@@ -230,53 +248,7 @@ sed -i '$a\\n# Append to JAVA_OPTS. Necessary to prevent some values being omitt
 # DB setup #
 ############
 
-file_env 'DB_USER'
-file_env 'DB_PASSWORD'
-# Lower case DB_VENDOR
-if [[ -n ${DB_VENDOR:-} ]]; then
-  DB_VENDOR=$(echo "$DB_VENDOR" | tr "[:upper:]" "[:lower:]")
-fi
-
-# Detect DB vendor from default host names
-if [[ -z ${DB_VENDOR:-} ]]; then
-    if (getent hosts postgres &>/dev/null); then
-        export DB_VENDOR="postgres"
-    elif (getent hosts mysql &>/dev/null); then
-        export DB_VENDOR="mysql"
-    elif (getent hosts mariadb &>/dev/null); then
-        export DB_VENDOR="mariadb"
-    elif (getent hosts oracle &>/dev/null); then
-        export DB_VENDOR="oracle"
-    elif (getent hosts mssql &>/dev/null); then
-        export DB_VENDOR="mssql"
-    elif (getent hosts h2 &>/dev/null); then
-        export DB_VENDOR="h2"
-        export DB_ADDR="h2"
-    fi
-fi
-
-# Detect DB vendor from legacy `*_ADDR` environment variables
-if [[ -z ${DB_VENDOR:-} ]]; then
-    if (printenv | grep '^POSTGRES_ADDR=' &>/dev/null); then
-        export DB_VENDOR="postgres"
-    elif (printenv | grep '^MYSQL_ADDR=' &>/dev/null); then
-        export DB_VENDOR="mysql"
-    elif (printenv | grep '^MARIADB_ADDR=' &>/dev/null); then
-        export DB_VENDOR="mariadb"
-    elif (printenv | grep '^ORACLE_ADDR=' &>/dev/null); then
-        export DB_VENDOR="oracle"
-    elif (printenv | grep '^MSSQL_ADDR=' &>/dev/null); then
-        export DB_VENDOR="mssql"
-    elif (printenv | grep '^H2_ADDR=' &>/dev/null); then
-        export DB_VENDOR="h2"
-        export DB_ADDR="h2"
-    fi
-fi
-
-# Default to H2 if DB type not detected
-if [[ -z ${DB_VENDOR:-} ]]; then
-    export DB_VENDOR="h2"
-fi
+export DB_VENDOR="postgres"
 
 # if the DB_VENDOR is postgres then append port to the DB_ADDR
 function append_port_db_addr() {
@@ -302,31 +274,12 @@ case "$DB_VENDOR" in
         fi
         append_port_db_addr
         ;;
-    mysql)
-        DB_NAME="MySQL";;
-    mariadb)
-        DB_NAME="MariaDB";;
-    mssql)
-        DB_NAME="Microsoft SQL Server";;
-    oracle)
-        DB_NAME="Oracle";;
-    h2)
-        if [[ -z ${DB_ADDR:-} ]] ; then
-          DB_NAME="Embedded H2"
-        else
-          DB_NAME="H2"
-        fi;;
     *)
-        echo "Unknown DB vendor $DB_VENDOR"
-        exit 1
+  echo "Unknown DB vendor $DB_VENDOR"
+  exit 1
 esac
 
-if [ "$DB_VENDOR" != "mssql" ] && [ "$DB_VENDOR" != "h2" ]; then
-    # Append '?' in the beginning of the string if JDBC_PARAMS value isn't empty
-    JDBC_PARAMS=$(echo "${JDBC_PARAMS:-}" | sed '/^$/! s/^/?/')
-else
-    JDBC_PARAMS=${JDBC_PARAMS:-}
-fi
+JDBC_PARAMS=${JDBC_PARAMS:-}
 
 export JDBC_PARAMS
 
@@ -345,27 +298,21 @@ set_legacy_vars "$(echo "$DB_VENDOR" | tr "[:upper:]" "[:lower:]")"
 
 # Configure DB
 
-echo "========================================================================="
 echo ""
 echo "  Using $DB_NAME database"
-echo ""
 echo "========================================================================="
-echo ""
 
 configured_file="/opt/jboss/configured"
 if [ ! -e "$configured_file" ]; then
     touch "$configured_file"
 
-    if [ "$DB_NAME" != "Embedded H2" ]; then
-      /bin/sh /opt/jboss/tools/databases/change-database.sh $DB_VENDOR
-    fi
-	
-    /opt/jboss/tools/x509.sh
-    /opt/jboss/tools/jgroups.sh
-    /opt/jboss/tools/infinispan.sh
-    /opt/jboss/tools/statistics.sh
-    /opt/jboss/tools/vault.sh
-    /opt/jboss/tools/autorun.sh
+    /bin/sh /opt/tools/databases/change-database.sh 
+    /opt/tools/x509.sh
+    /opt/tools/jgroups.sh
+    /opt/tools/infinispan.sh
+    /opt/tools/statistics.sh
+    /opt/tools/vault.sh
+    /opt/tools/autorun.sh
 fi
 
 ##################
@@ -376,17 +323,12 @@ exec /opt/jboss/keycloak/bin/standalone.sh $SYS_PROPS $@
 exit $?
 ```
 ## tools/databases/change-database.sh
+```
 #!/bin/bash -e
-
-DB_VENDOR=$1
-
-cd /opt/jboss/keycloak
-
-bin/jboss-cli.sh --file=/opt/jboss/tools/cli/databases/$DB_VENDOR/standalone-configuration.cli
-rm -rf /opt/jboss/keycloak/standalone/configuration/standalone_xml_history
-
-bin/jboss-cli.sh --file=/opt/jboss/tools/cli/databases/$DB_VENDOR/standalone-ha-configuration.cli
+/opt/keycloak/bin/jboss-cli.sh --file=/opt/jboss/tools/cli/databases/postgres/standalone-ha-configuration.cli
 rm -rf standalone/configuration/standalone_xml_history/current/*
+```
+
 ### databases/$DB_VENDOR/standalone-ha-configuration.cli
 #### tools/databases/postgres/module.xml
 ```
@@ -520,7 +462,7 @@ function autogenerate_keystores() {
 autogenerate_keystores
 ```
 
-##/opt/jboss/tools/jgroups.sh
+## /opt/jboss/tools/jgroups.sh
 ```
 #!/bin/bash
 
@@ -554,7 +496,7 @@ if [ -n "$JGROUPS_DISCOVERY_PROTOCOL" ]; then
 fi
 ```
 
-##/opt/jboss/tools/infinispan.sh
+## /opt/jboss/tools/infinispan.sh
 ```
 # How many owners / replicas should our distributed caches have. If <2 any node that is removed from the cluster will cause a data-loss!
 # As it is only sensible to replicate AuthenticationSessions for certain cases, their replication factor can be configured independently
@@ -588,7 +530,7 @@ if [ -n "$KEYCLOAK_STATISTICS" ]; then
 fi
 ```
 
-##/opt/jboss/tools/vault.sh
+## /opt/jboss/tools/vault.sh
 ```
 #!/bin/bash
 
@@ -604,7 +546,7 @@ if [ -d "$JBOSS_HOME/secrets" ]; then
     sed -i '$ d' "$JBOSS_HOME/bin/.jbossclirc"
 fi
 ```
-##/opt/jboss/tools/autorun.sh
+## /opt/jboss/tools/autorun.sh
  ```
  #!/bin/bash -e
 cd /opt/jboss/keycloak
