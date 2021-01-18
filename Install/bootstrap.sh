@@ -4,6 +4,8 @@ KEYCLOAK_VERSION=11.0.3
 POSTGRES_VERSION=42.2.18
 KEYCLOAK_URL=http://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/keycloak-${KEYCLOAK_VERSION}.tar.gz
 POSTGRESQL_URL=https://jdbc.postgresql.org/download/postgresql-$POSTGRES_VERSION.jar
+SHASUM="e12092ec6a6e048bf696d5a23c3674928b41ddc3f810016ef3e7354ad79fc746"
+
 
 echo "---------------------------------------------"
 echo " Etape 0 : Mise a jour des package           "
@@ -25,8 +27,8 @@ sudo yum install -y java-1.8.0-openjdk
 echo "--------------------------------------------------"
 echo "Step 5: Creer  user/group keycloak pour keycloak "
 echo "--------------------------------------------------"
-#sudo groupadd -r keycloak
-#sudo useradd  -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak
+sudo groupadd -r keycloak               #pb
+sudo useradd  -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak #pb
 
 
 echo "--------------------------------------------"
@@ -39,6 +41,8 @@ else
     echo "Téléchargement de  keycloak-${KEYCLOAK_VERSION} ..."
     mkdir -p /vagrant/downloads
     wget -q -O /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz "${KEYCLOAK_URL}"
+    #wget -q -O /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz "${KEYCLOAK_URL}" | shasum -a 256 -c
+
     if [ $? != 0 ];
     then
         echo "GRAVE: Téléchargement keycloak impossible depuis ${KEYCLOAK_URL}"	
@@ -65,14 +69,14 @@ test -d /opt/keycloak-${KEYCLOAK_VERSION} || sudo ln -s /opt/keycloak-${KEYCLOAK
 echo "-----------------------------------------------------"
 echo "Step 5 : donner l'acces (exec) au user/groug keycloak "
 echo "-----------------------------------------------------"
-#sudo chown -R keycloak:keycloak /opt/keycloak
+sudo chown -R keycloak:keycloak /opt/keycloak   #pb
 
 
 
 echo "--------------------------------------------------"
 echo "Step 7 : Limiter l'acces au repertoire standalone "
 echo "--------------------------------------------------" 
-#sudo -u keycloak chmod 700 /opt/keycloak/standalone
+sudo -u keycloak chmod 700 /opt/keycloak/standalone   #pb
 #sudo chmod 777 /opt/keycloak/standalone
 
 
@@ -98,10 +102,8 @@ echo "------------------------------------------------"
 echo "Step 9 : installation du driver postgres        "
 echo "------------------------------------------------" 
 sudo mkdir -p /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
-sudo cd /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
 sudo cp /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
 sudo cp /vagrant/postgres/module.xml /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
-
 
 
 echo "-----------------------------------------------------"
@@ -121,7 +123,7 @@ echo "-----------------------------------------------------"
 echo "Step 12: Configuration systemD                       "
 echo "-----------------------------------------------------"
 
-echo "Step 12.1 : Copier de config keycloak.conf dans /etc/keycloak"
+echo "Step 12.1 : Copier de la config keycloak.conf dans /etc/keycloak"
 sudo mkdir -p /etc/keycloak
 sudo cp /vagrant/service/keycloak.conf /etc/keycloak/
 sudo more /etc/keycloak/keycloak.conf
@@ -165,4 +167,3 @@ echo "Step 13: Opening port 8080 on iptables ...           "
 echo "-----------------------------------------------------"
 iptables -I INPUT 3 -p tcp -m state --state NEW -m tcp --dport 8080 -j ACCEPT
 iptables-save > /etc/sysconfig/iptables
-
