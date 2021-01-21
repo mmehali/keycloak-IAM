@@ -3,8 +3,9 @@
 KEYCLOAK_VERSION=11.0.3
 POSTGRES_VERSION=42.2.18
 KEYCLOAK_URL=http://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/keycloak-${KEYCLOAK_VERSION}.tar.gz
-POSTGRESQL_URL=https://jdbc.postgresql.org/download/postgresql-$POSTGRES_VERSION.jar
+POSTGRESQL_URL=https://jdbc.postgresql.org/download/postgresql-${POSTGRES_VERSION}.jar
 
+sudo tar xfz /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz -C /opt
 echo "---------------------------------------------"
 echo " Etape 0 : Mise a jour des package           "
 echo "---------------------------------------------"
@@ -37,9 +38,10 @@ then
     echo "Installation Keycloak depuis /vagrant/downloads/keycloak-${KEYCLOAK_VERSION} ..."
 else
     echo "Téléchargement de  keycloak-${KEYCLOAK_VERSION} ..."
+    echo "depuis "${KEYCLOAK_URL}" "
     mkdir -p /vagrant/downloads
     wget -q -O /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz "${KEYCLOAK_URL}" 
-    curl -L -o /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz "${KEYCLOAK_URL}"
+    #curl -L -o /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz "${KEYCLOAK_URL}"
 
     if [ $? != 0 ];
     then
@@ -60,7 +62,7 @@ sudo tar xvfz /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz -C /opt
 echo "--------------------------------------------------------------------"
 echo "Step 4 : create a lien symbolique pointant sur le rep d'installation "
 echo "--------------------------------------------------------------------"
-test -d /opt/keycloak-${KEYCLOAK_VERSION} || sudo ln -s /opt/keycloak-${KEYCLOAK_VERSION} /opt/keycloak
+sudo ln -sfn /opt/keycloak-${KEYCLOAK_VERSION} /opt/keycloak
 
 
 echo "-----------------------------------------------------"
@@ -73,7 +75,7 @@ echo "-----------------------------------------------------"
 echo "--------------------------------------------------"
 echo "Step 7 : Limiter l'acces au repertoire standalone "
 echo "--------------------------------------------------" 
-sudo -u keycloak chmod 700 /opt/keycloak/standalone   #pb
+#sudo -u keycloak chmod 700 /opt/keycloak/standalone   #pb
 #sudo chmod 777 /opt/keycloak/standalone
 
 
@@ -85,12 +87,12 @@ then
     echo "Installation postgresql depuis /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar..."
 else
     echo "Téléchargement de  postgresql-${POSTGRES_VERSION}.jar ..."
+    echo "depuis "-${POSTGRESQL_URL}" "
     wget -q -O /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar  "${POSTGRES_URL}"
-    curl -L -o /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar  "${POSTGRES_URL}"
     if [ $? != 0 ];
     then
-        echo "GRAVE: Téléchargement du driver Postgres impossible depuis ${POSTGRES_URL}"	
-        #exit 1
+       # echo "GRAVE: Téléchargement du driver Postgres impossible depuis ${POSTGRESQL_URL}"	
+       # exit 1
     fi
     echo "Installation du driver postgres ..."
 fi
