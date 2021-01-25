@@ -106,7 +106,7 @@ echo "----------------------------------------------------------"
 
 
 echo "-----------------------------------------------------------"
-echo "Step 10 : configuration keycloak                           "
+echo "Step 10 : configuration keycloak (log, proxy, etc)         "
 echo "-----------------------------------------------------------"
 sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/cli/standalone-ha-config.cli
 
