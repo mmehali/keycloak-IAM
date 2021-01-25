@@ -1,10 +1,64 @@
+embed-server --server-config=standalone-ha.xml --std-out=echo
+batch
 
+#   <logger category="org.keycloak">
+#       <level name="${env.KEYCLOAK_LOGLEVEL:INFO}"/>
+#    </logger>
 /subsystem=logging/logger=org.keycloak:add
 /subsystem=logging/logger=org.keycloak:write-attribute(name=level,value=${env.KEYCLOAK_LOGLEVEL:INFO})
 
+
+
+# <root-logger>
+#  <level name="${env.ROOT_LOGLEVEL:INFO}"/>
+#     <handlers>
+#     <handler name="CONSOLE"/>
+#  </handlers>
+#</root-logger>          
 /subsystem=logging/root-logger=ROOT:change-root-log-level(level=${env.ROOT_LOGLEVEL:INFO})
 
+##### Avant
+# <root-logger>
+#   <level name="INFO"/>
+#   <handlers>
+#     <handler name="CONSOLE"/>
+#     <handler name="FILE"/>
+#   </handlers>
+# </root-logger>
+##### Apres
+#<root-logger>
+#   <level name="${env.ROOT_LOGLEVEL:INFO}"/>
+#   <handlers>
+#      <handler name="CONSOLE"/>
+#   </handlers>
+# </root-logger>
 /subsystem=logging/root-logger=ROOT:remove-handler(name="FILE")
+
+#<periodic-rotating-file-handler name="FILE" autoflush="true">
+#  <formatter>
+#    <named-formatter name="PATTERN"/>
+#  </formatter>
+#  <file relative-to="jboss.server.log.dir" path="server.log"/>
+#  <suffix value=".yyyy-MM-dd"/>
+#  <append value="true"/>
+#</periodic-rotating-file-handler>
 /subsystem=logging/periodic-rotating-file-handler=FILE:remove
 
+
+#### Avant
+# <console-handler name="CONSOLE">
+#   <level name="INFO"/>
+#   <formatter>
+#     <named-formatter name="COLOR-PATTERN"/>
+#   </formatter>
+# </console-handler>
+#### Apres 
+# <console-handler name="CONSOLE">
+#   <formatter>
+#     <named-formatter name="COLOR-PATTERN"/>
+#   </formatter>
+# </console-handler>
 /subsystem=logging/console-handler=CONSOLE:undefine-attribute(name=level)
+
+run-batch
+stop-embedded-server

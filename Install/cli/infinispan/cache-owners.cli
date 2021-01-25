@@ -1,0 +1,30 @@
+embed-server --server-config=standalone-ha.xml --std-out=echo
+batch
+
+#<distributed-cache name="sessions" owners="2"/>
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=sessions: write-attribute(name=owners, value=4)
+
+#<distributed-cache name="offlineSessions" owners="2"/>
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineSessions: write-attribute(name=owners, value=2)
+
+#<distributed-cache name="loginFailures" owners="2"/>
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=loginFailures: write-attribute(name=owners, value=2)
+
+#<distributed-cache name="clientSessions" owners="2"/>
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=clientSessions: write-attribute(name=owners, value=2)
+
+#<distributed-cache name="offlineClientSessions" owners="2"/>
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineClientSessions: write-attribute(name=owners, value=2)
+
+# <distributed-cache name="actionTokens" owners="2">
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=actionTokens: write-attribute(name=owners, value=2)
+
+#<distributed-cache name="authenticationSessions" owners="2"/>
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=authenticationSessions: write-attribute(name=owners, value=2)
+run-batch
+stop-embedded-server
+
+# Test-----------------------------
+#~/DEV/Keycloak/slave/bin/jboss-cli.sh --file="./cli/infinispan/cache-owners.cli"
+
+

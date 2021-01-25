@@ -6,10 +6,16 @@ Before=httpd.service
 [Service]
 Environment=LAUNCH_JBOSS_IN_BACKGROUND=1
 EnvironmentFile=-/etc/keycloak/keycloak.conf
+
+# A remplacer par user keycloak:keycloak
 User=root
 Group=root
+
+
 LimitNOFILE=102642
 PIDFile=/var/run/keycloak/keycloak.pid
+
+Environement "java.security.egd=file:/dev/./urandom"
 ExecStart=/opt/keycloak/bin/launch.sh $KEYCLAOK_MODE $KEYCLAOK_CONFIG $KEYCLAOK_BIND
 StandardOutput=null
 

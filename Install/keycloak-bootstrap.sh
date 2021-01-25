@@ -24,14 +24,14 @@ sudo yum install -y java-1.8.0-openjdk
 
 
 echo "--------------------------------------------------"
-echo "Step 5: Creer  user/group keycloak pour keycloak "
+echo "Step 2: Creer  user/group keycloak pour keycloak "
 echo "--------------------------------------------------"
 #sudo groupadd -r keycloak               #pb
 #sudo useradd  -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak #pb
 
 
 echo "--------------------------------------------"
-echo "Step 2 : Telechargement de keycloak         "
+echo "Step 3 : Telechargement de keycloak         "
 echo "--------------------------------------------"
 if [ -f "/vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz" ];
 then
@@ -54,19 +54,19 @@ fi
 
 
 echo "------------------------------------------------------------------"
-echo "Step 3 : Extraction keycloak-${KEYCLOAK_VERSION}.tar.gz dans /opt "
+echo "Step 4 : Extraction keycloak-${KEYCLOAK_VERSION}.tar.gz dans /opt "
 echo "------------------------------------------------------------------" 
-sudo tar xvfz /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz -C /opt
+sudo tar xfz /vagrant/downloads/keycloak-${KEYCLOAK_VERSION}.tar.gz -C /opt
 
 
 echo "--------------------------------------------------------------------"
-echo "Step 4 : create a lien symbolique pointant sur le rep d'installation "
+echo "Step 5 : create a lien symbolique pointant sur le rep d'installation "
 echo "--------------------------------------------------------------------"
 sudo ln -sfn /opt/keycloak-${KEYCLOAK_VERSION} /opt/keycloak
 
 
 echo "-----------------------------------------------------"
-echo "Step 5 : donner l'acces (exec) au user/groug keycloak "
+echo "Step 6 : donner l'acces (exec) au user/groug keycloak "
 echo "-----------------------------------------------------"
 #sudo chown -R keycloak:keycloak /opt/keycloak   #pb
 
@@ -89,26 +89,46 @@ else
     echo "Téléchargement de  postgresql-${POSTGRES_VERSION}.jar ..."
     echo "depuis "-${POSTGRESQL_URL}" "
     wget -q -O /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar  "${POSTGRES_URL}"
-    if [ $? != 0 ];
-    then
+    #if [ $? != 0 ];
+    #then
        # echo "GRAVE: Téléchargement du driver Postgres impossible depuis ${POSTGRESQL_URL}"	
        # exit 1
-    fi
+    #fi
     echo "Installation du driver postgres ..."
 fi
 
 echo "------------------------------------------------"
 echo "Step 9 : installation du Module postgres        "
 echo "------------------------------------------------" 
-sudo mkdir -p /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
-sudo cp /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
-sudo cp /vagrant/postgres/module.xml /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
+#sudo mkdir -p /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main
+#sudo cp /vagrant/downloads/postgresql-${POSTGRES_VERSION}.jar /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
+#sudo cp /vagrant/cli/postgres/module.xml /opt/keycloak/modules/system/layers/base/org/postgresql/jdbc/main/
 
 
 echo "-----------------------------------------------------"
 echo "Step 10 : configuration keycloak                     "
 echo "-----------------------------------------------------"
-sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/standalone-ha-config.cli
+sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/cli/standalone-ha-config.cli
+
+configured_file="/opt/keycloak/configured"
+#if [ ! -e "$configured_file" ]; then
+    #touch "$configured_file"
+    echo "Step 10.1 : configuration de postgres                "
+    #sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/cli/postgres/standalone-ha-config.cli
+    echo "Step 10.2 : configuration de x509                      "
+    sudo /vagrant/x509.sh
+    echo "Step 10.3 : configuration de jgroups                   "
+    sudo /vagrant/jgroups.sh
+    echo "Step 10.4 : configuration infinspan                    "
+    sudo /vagrant/infinispan.sh
+    echo "Step 10.5 : configuration stattistics                  "
+    sudo /vagrant/statistics.sh
+    echo "Step 10.6 : configuration vault                        "
+    sudo /vagrant/vault.sh
+    echo "Step 10.7 : configuration  autorun                     "
+    sudo /vagrant/autorun.sh
+#fi
+
 sudo rm -rf /opt/keycloak/standalone/configuration/standalone_xml_history
 
 
@@ -118,51 +138,4 @@ echo "-----------------------------------------------------"
 sudo /opt/keycloak/bin/add-user-keycloak.sh -u admin -p admin
 
 
-echo "-----------------------------------------------------"
-echo "Step 12: Configuration systemD                       "
-echo "-----------------------------------------------------"
 
-echo "Step 12.1 : Copier de la config keycloak.conf dans /etc/keycloak"
-sudo mkdir -p /etc/keycloak
-sudo cp /vagrant/service/keycloak.conf /etc/keycloak/
-sudo more /etc/keycloak/keycloak.conf
-
-echo "Step 12.2 : Copier et configurer le fichier de demarrage lauch.sh"
-sudo cp /vagrant/service/launch.sh /opt/keycloak/bin/
-sudo more /opt/keycloak/bin/lauch.sh
-sudo more | ll /opt/keycloak/bin/lauch.sh
-sudo chmod +x /opt/keycloak/bin/launch.sh
-#sudo chown keycloak: /opt/keycloak/bin/launch.sh
-
-echo "Step 12.3 : Copier et configurer le fichier de service keycloak.service"
-sudo cp /vagrant/service/keycloak.service /etc/systemd/system/
-more /etc/systemd/system/keycloak.service
-
-
-echo "-----------------------------------------------------"
-echo "Step 13: demarrage du service keycloak               "
-echo "-----------------------------------------------------"
-#sudo systemctl daemon-reload
-sudo systemctl start keycloak
-sudo systemctl enable keycloak
-
-echo "-----------------------------------------------------"
-echo "Step 14: etat du service keycloak                    "
-echo "-----------------------------------------------------"
-sudo systemctl status keycloak
-
-echo "-----------------------------------------------------"
-echo "Step 14: logs du server keycloak                     "
-echo "-----------------------------------------------------"
-
-#sudo tail -f /opt/keycloak/standalone/log/server.log
-#journalctl -u keycloak.service
-
-#voir https://medium.com/@hasnat.saeed/setup-keycloak-server-on-ubuntu-18-04-ed8c7c79a2d9
-
-#sudo /sbin/service keycloak start
-echo "-----------------------------------------------------"
-echo "Step 13: Opening port 8080 on iptables ...           "
-echo "-----------------------------------------------------"
-#iptables -I INPUT 3 -p tcp -m state --state NEW -m tcp --dport 8080 -j ACCEPT
-#iptables-save > /etc/sysconfig/iptables

@@ -1,1 +1,1 @@
-{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"/home/sofiane/DEV/vagrant-keycloak/keycloak-IAM/Install","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}
+{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"/home/sofiane/DEV/keycloak-install/keycloak-IAM/Install","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}
