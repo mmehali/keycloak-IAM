@@ -1,55 +1,47 @@
 #!/bin/bash
  
-  #####################################################
-  # creation de la cle privé et du certificat         #
-  #####################################################
-  #mkdir - p /etc/x509/https/
-  #chmod 0700 /etc/x509/https/
-  
-  # creation de la cle privé
-  #openssl genrsa 2048 > /etc/x509/https/tls.key
-  #chmod 400 /etc/x509/https/tls.key
-  
-  # creation du certificat a partir de la clé privée.
-  #openssl req -new -x509 -nodes -sha256 -days 365 -key tls.key -out tls.crt
-  
-  ######################################################
-  # Copier la cle privée et le certificat              #
-  ######################################################
-  echo "- Etape 10.2.1 : Copier la cle privée et le certificat: creation repertoire /etc/x509/https"
+ INSTALL_SRC=/vagrant
+ 
+
+  echo "--------------------------------------------------------"
+  echo " Copier la cle privée  tls.key et le certificat tls.crt "
+  echo " dans /etc/x509/https                                   "
+  echo "--------------------------------------------------------"
   if [ ! -d "/etc/x509/https" ]; then
     mkdir -p /etc/x509/https
   fi
   
-  echo "- Etape 10.2.1 : Copier la cle privée et le certificat: copier tls.key et tls.crt dans /etc/x509/https"
-  cp /vagrant/certificats/tls.key /etc/x509/https/
-  cp /vagrant/certificats/tls.crt /etc/x509/https/
+  cp ${INSTALL_SRC}/certificats/tls.key /etc/x509/https/
+  cp ${INSTALL_SRC}/certificats/tls.crt /etc/x509/https/
    
    
-  KEYSTORES_STORAGE=/opt/keycloak/standalone/configuration/keystores
+ 
 
-  echo "- Etape 10.2.1 : Creating https keystore : creer repertoire ${KEYSTORES_STORAGE} "
-  if [ ! -d "${KEYSTORES_STORAGE}" ]; then
+ echo "---------------------------------------------------------------"
+ echo " Creation du keystore ${KEYSTORES_STORAGE}/https-keystore.pk12 "
+ echo "---------------------------------------------------------------"
+ 
+ KEYSTORES_STORAGE=/opt/keycloak/standalone/configuration/keystores
+ if [ ! -d "${KEYSTORES_STORAGE}" ]; then
     mkdir -p "${KEYSTORES_STORAGE}"
   fi
-
 
   # Auto-generate the https keystore if volumes for OpenShift's
   # serving x509 certificate secrets service were properly mounted
   echo "Auto-generate the https keystore "
   
-  echo "- Etape 10.2.1 : Creating https keystore : genérer un mot de passe de 32 caracteres et l'encode en base64"
+  echo "- genérer un mot de passe de 32 caracteres et l'encoder en base64"
   PASSWORD=$(openssl rand -base64 32)
     
   if [ -f "/etc/x509/https/tls.key" ] && [ -f "/etc/x509/https/tls.crt" ]; then
      echo "Creating https keystore via OpenShift's service serving x509 certificate secrets.."
      
-     echo "- Etape 10.2.1 : creation de keysrore ${KEYSTORES_STORAGE}/https-keystore.pk12"
+     echo "- creation du keysrore ${KEYSTORES_STORAGE}/https-keystore.pk12"
      openssl pkcs12 -export -name  keycloak-https-key -inkey /etc/x509/https/tls.key \
       -in    /etc/x509/https/tls.crt -out ${KEYSTORES_STORAGE}/https-keystore.pk12 \
       -password pass:"${PASSWORD}" >& /dev/null
      
-     echo "- Etape 10.2.1 : import keystore in ${KEYSTORES_STORAGE}/https-keystore.jks"
+     echo "-importer le keystore dans ${KEYSTORES_STORAGE}/https-keystore.jks"
      echo "keytool -importkeystore -noprompt -srcalias keycloak-https-key -destalias keycloak-https-key -srckeystore  ${KEYSTORES_STORAGE}/https-keystore.pk12 -srcstoretype pkcs12 -destkeystore ${KEYSTORES_STORAGE}/https-keystore.jks -storepass "${PASSWORD}" -srcstorepass "${PASSWORD}" "
        
        
@@ -77,20 +69,23 @@
      echo "set keycloak_tls_keystore_file=${KEYSTORES_STORAGE}/https-keystore.jks" >> /opt/keycloak/bin/.jbossclirc
      #echo "set configuration_file=standalone-ha.xml" >> "/opt/keycloak/bin/.jbossclirc"
      
-     echo "- Etape 10.2.1 :- configurer le keystore en executant : /vagrant/cli/x509-keystore.cli"
-     sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/cli/x509-keystore.cli >& /dev/null
+     echo "- Etape 10.2.1 :- configurer le keystore en executant : ${INSTALL_SRC}/cli/x509-keystore.cli"
+     sudo /opt/keycloak/bin/jboss-cli.sh --file=${INSTALL_SRC}/cli/x509-keystore.cli  --properties=env.properties >& /dev/null
      sed -i '$ d' "/opt/keycloak/bin/.jbossclirc"
   fi
 
 
-  echo "- Etape 10.2.2 : Configuration du truststore "
+  echo "-----------------------------------------------------------------"
+  echo "   Configuration du truststore                                   "
+  echo "-----------------------------------------------------------------"
+  
   # Auto-generate the Keycloak truststore if X509_CA_BUNDLE was provided
   X509_CRT_DELIMITER="/-----BEGIN CERTIFICATE-----/"
   
   JKS_TRUSTSTORE_PATH="${KEYSTORES_STORAGE}/truststore.jks"
-  echo "- Etape 10.2.2 : Configuration du truststore : "${KEYSTORES_STORAGE}/truststore.jks"
+  echo "- Configuration du truststore : "${KEYSTORES_STORAGE}/truststore.jks"
   
-  echo "- Etape 10.2.2 : Configuration d'un mot de pas pour le truststore"
+  echo "- Configuration d'un mot de pas pour le truststore"
   PASSWORD=$(openssl rand -base64 32 2>/dev/null)
   TEMPORARY_CERTIFICATE="temporary_ca.crt"
   if [ -n "${X509_CA_BUNDLE}" ]; then
@@ -145,8 +140,8 @@
     echo "set keycloak_tls_truststore_file=${KEYSTORES_STORAGE}/truststore.jks" >> "/opt/keycloak/bin/.jbossclirc"
     echo "set configuration_file=standalone-ha.xml" >> "/opt/keycloak/bin/.jbossclirc"
     
-    echo "- Etape 10.2.2 : executer sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/cli/x509-truststore.cli >& /dev/null"
-    sudo /opt/keycloak/bin/jboss-cli.sh --file=/vagrant/cli/x509-truststore.cli >& /dev/null
+    echo "- Etape 10.2.2 : executer sudo /opt/keycloak/bin/jboss-cli.sh --file=${INSTALL_SRC}/cli/x509-truststore.cli >& /dev/null"
+    sudo /opt/keycloak/bin/jboss-cli.sh --file=${INSTALL_SRC}/cli/x509-truststore.cli  --properties=env.properties >& /dev/null
     sed -i '$ d' "/opt/keycloak/bin/.jbossclirc"
     
     popd >& /dev/null

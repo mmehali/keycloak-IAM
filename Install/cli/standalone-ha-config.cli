@@ -1,6 +1,6 @@
 embed-server --server-config=standalone-ha.xml --std-out=echo
-run-batch --file=/vagrant/cli/loglevel.cli
-run-batch --file=/vagrant/cli/proxy.cli
-run-batch --file=/vagrant/cli/hostname.cli
-run-batch --file=/vagrant/cli/theme.cli
+run-batch --file=${INSTALL_SRC}/cli/logs/loglevel.cli
+run-batch --file=${INSTALL_SRC}/cli/proxy/proxy.cli
+run-batch --file=${INSTALL_SRC}/cli/hostname/hostname.cli
+run-batch --file=${INSTALL_SRC}/cli/themes/theme.cli
 stop-embedded-server

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+INSTALL_SRC=/vagrant
+
 JGROUPS_DISCOVERY_EXTERNAL_IP=172.21.48.39
 JGROUPS_DISCOVERY_PROTOCOL=TCPPING
 JGROUPS_DISCOVERY_PROPERTIES=initial_hosts="172.21.48.4[7600],172.21.48.39[7600]"
@@ -34,11 +36,11 @@ if [ -n "$JGROUPS_DISCOVERY_PROTOCOL" ]; then
     # confirure le protocole spécifie si le fichier CLI de configuration de celui-ci est present#
     # sinon on utilise la configuration par defaut                                              #
     #############################################################################################
-    if [ -f "/vagrant/cli/jgroups/discovery/$JGROUPS_DISCOVERY_PROTOCOL.cli" ]; then
-       echo "10.2.1 : /opt/keycloak/bin/jboss-cli.sh --file="/vagrant/cli/jgroups/discovery/$JGROUPS_DISCOVERY_PROTOCOL.cli" 
-       sudo /opt/keycloak/bin/jboss-cli.sh --file="/vagrant/cli/jgroups/discovery/$JGROUPS_DISCOVERY_PROTOCOL.cli" >& /dev/null
+    if [ -f "${INSTALL_SRC}/cli/jgroups/discovery/$JGROUPS_DISCOVERY_PROTOCOL.cli" ]; then
+       echo "10.2.1 : /opt/keycloak/bin/jboss-cli.sh --file="${INSTALL_SRC}/cli/jgroups/discovery/$JGROUPS_DISCOVERY_PROTOCOL.cli"   
+       sudo /opt/keycloak/bin/jboss-cli.sh --file="${INSTALL_SRC}/cli/jgroups/discovery/$JGROUPS_DISCOVERY_PROTOCOL.cli"  --properties=env.properties >& /dev/null
     else
-       echo "10.2.1 :/opt/bin/jboss-cli.sh --file="/vargrant/cli/jgroups/discovery/default.cli"
-       sudo /opt/keycloak/bin/jboss-cli.sh --file="/vargrant/cli/jgroups/discovery/default.cli" >& /dev/null
+       echo "10.2.1 :/opt/bin/jboss-cli.sh --file="${INSTALL_SRC}/cli/jgroups/discovery/default.cli"
+       sudo /opt/keycloak/bin/jboss-cli.sh --file="${INSTALL_SRC}/cli/jgroups/discovery/default.cli"  --properties=env.properties >& /dev/null
     fi
 fi
