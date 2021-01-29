@@ -40,33 +40,40 @@ echo "Step 4 : Configuration keycloak : configuration de datasource postgres  "
 echo "-------------------------------------------------------------------------"
 sudo /opt/keycloak/bin/jboss-cli.sh --file=${INSTALL_SRC}/cli/postgres/standalone-ha-config.cli  --properties=env.properties
 
-echo "----------------------------------------------------------------------------------"
-echo "Step 5 : Configuration keycloak : configuration de x509 (keyStore, truststore)   "
-echo "----------------------------------------------------------------------------------"    
-sudo ${INSTALL_SRC}/x509.sh
-    
+
 echo "-------------------------------------------------------------------------"
-echo "Step 6 : Configuration keycloak : configuration des jgroups             "
+echo "Step 5 : Configuration keycloak : configuration du keystore x509         "
+echo "-------------------------------------------------------------------------"    
+sudo ${INSTALL_SRC}/x509_keysrore.sh
+
+echo "-------------------------------------------------------------------------"
+echo "Step 6 : Configuration keycloak : configuration du truststore) x509      "
+echo "-------------------------------------------------------------------------"    
+sudo ${INSTALL_SRC}/x509_truststore.sh
+
+
+echo "-------------------------------------------------------------------------"
+echo "Step 7 : Configuration keycloak : configuration des jgroups             "
 echo "-------------------------------------------------------------------------"
 sudo ${INSTALL_SRC}/jgroups.sh
     
 echo "-------------------------------------------------------------------------"
-echo "Step 7 : Configuration keycloak : configuration du cache (infinspan)    "
+echo "Step 8 : Configuration keycloak : configuration du cache (infinspan)    "
 echo "-------------------------------------------------------------------------"
 sudo ${INSTALL_SRC}/infinispan.sh
     
 echo "-------------------------------------------------------------------------"
-echo "Step 8 : Configuration keycloak : configuration des statistiques        "
+echo "Step 9 : Configuration keycloak : configuration des statistiques        "
 echo "-------------------------------------------------------------------------"
 sudo ${INSTALL_SRC}/statistics.sh
     
 echo "-------------------------------------------------------------------------"
-echo "Step 9 : Configuration keycloak : configuration vault                   "
+echo "Step 10 : Configuration keycloak : configuration vault                   "
 echo "-------------------------------------------------------------------------"
 sudo ${INSTALL_SRC}/vault.sh
     
 echo "-------------------------------------------------------------------------"
-echo "Step 10 : Configuration keycloak : lancement de scripts spécifiques      "
+echo "Step 11 : Configuration keycloak : lancement de scripts spécifiques      "
 echo "-------------------------------------------------------------------------"
 sudo ${INSTALL_SRC}/autorun.sh
     
